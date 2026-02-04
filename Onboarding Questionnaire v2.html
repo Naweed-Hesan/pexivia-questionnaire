@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pexivia - Client Questionnaire</title>
+    
+    <!-- 
+    =====================================================
+    PROJECT SPECIFICATION FOR CLAUDE CODE
+    =====================================================
+    
+    GOAL: Deploy this questionnaire to Pexivia.com via Vercel with Resend email integration.
+    
+    OWNER INFO:
+    - Name: Naweed Hesan
+    - Title: Graphic Designer
+    - Email: naweedhesan@gmail.com
+    - Phone: (561) 365-8832
+    - Domain: Pexivia.com (already connected to Resend)
+    
+    FEATURES NEEDED:
+    1. Welcome page with profile card
+    2. 3-step form (About You → Design Preferences → Select Packages)
+    3. Dynamic pricing based on selected services
+    4. Budget multiplier (higher budget = higher prices)
+    5. Timeline multiplier (rush = higher prices)
+    6. Email form submissions to naweedhesan@gmail.com via Resend API
+    7. "Contact for Custom Quote" button option
+    
+    SERVICES & BASE PRICING:
+    
+    BRANDING:
+    - Basic $499 (14 days, 2 revisions): Logo Design, Color Palette, Logo Usage Guidelines, Brand Mockups
+    - Standard $999 (21 days, 4 revisions): + Typography System, Brand Book Design
+    - Premium $1499 (30 days, 6 revisions): + Stationery Suite, Presentation Template, Iconography Set, Brand Do's & Don'ts
+    
+    WEB DESIGN:
+    - Basic $1999 (21 days, 2 revisions): 1-Page Landing, Desktop + Mobile, Style Direction, Figma + Assets
+    - Standard $3999 (30 days, 4 revisions): + Discovery Workshop, Sitemap & Wireframes, Up to 5 Pages, Interactive Prototype, Design System, Developer Handoff
+    - Premium $9900 (60 days, 6 revisions): + Strategy Workshop, Up to 10 Pages, Full Responsive, Complete Design System, Micro-interaction Specs, Accessibility Review
+    
+    PACKAGING:
+    - Basic $999 (14 days, 2 revisions): 1-2 Product Designs, Label/Box Design, Print-Ready Files, Product Mockups
+    - Standard $1999 (21 days, 4 revisions): + 3-5 Products, Custom Dielines, Brand Consistency, Multiple Mockups
+    - Premium $3499 (30 days, 6 revisions): + Full Product Line, 3D Mockups, Print Specifications, Production Guidance
+    
+    BUDGET MULTIPLIERS:
+    - Under $1,000: 1x
+    - $1,000 - $2,500: 1x
+    - $2,500 - $5,000: 1.25x
+    - $5,000 - $10,000: 1.5x
+    - $10,000 - $25,000: 2x
+    - $25,000+: 2.5x
+    
+    TIMELINE MULTIPLIERS:
+    - ASAP (Rush): 1.5x
+    - Within 2 weeks: 1.25x
+    - Within 1 month: 1x
+    - 1-2 months: 1x
+    - Flexible: 1x
+    
+    FORM FIELDS:
+    Page 1 - About You:
+    - Full Name, Company, Email, Phone
+    - Services (checkboxes): Branding, Web Design, Packaging
+    - Project Description (textarea)
+    - Industry, Target Audience
+    
+    Page 2 - Design Preferences:
+    - Style (multi-select): Minimal, Modern, Bold, Elegant, Playful, Classic
+    - Color Direction (multi-select): Warm Tones, Cool Tones, Neutral, Vibrant, Muted, Monochrome
+    - Specific Colors (text)
+    - Typography (multi-select): Sans Serif, Serif, Script
+    - References/Inspiration (textarea)
+    - Things to Avoid (text)
+    - Timeline (dropdown)
+    - Budget (dropdown)
+    - Existing Assets (dropdown)
+    
+    Page 3 - Packages:
+    - Show package sections ONLY for selected services
+    - Each section has tabs: Basic | Standard | Premium
+    - Deliverables shown with checkmarks (included) or X (not included)
+    - Include/exclude toggle for each service
+    - Running total at bottom
+    - Additional Notes (textarea)
+    - Referral Source (dropdown)
+    - Two buttons: "Contact for Custom Quote" and "Submit Inquiry"
+    
+    ALL FORM FIELDS ARE OPTIONAL - user can submit even with empty fields.
+    
+    =====================================================
+    -->
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        :root {
+            --dark: #191919;
+            --dark-lighter: #232323;
+            --dark-border: #2e2e2e;
+            --orange: #f68700;
+            --orange-dim: rgba(246, 135, 0, 0.15);
+            --white: #ffffff;
+            --gray: #8a8a8a;
+            --gray-light: #b5b5b5;
+            --green: #22c55e;
+        }
+        
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--dark);
+            color: var(--white);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        .container { max-width: 720px; margin: 0 auto; padding: 60px 24px 100px; }
+        
+        /* Welcome Page */
+        .welcome-page { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; text-align: center; padding: 40px 20px; }
+        .welcome-page.hidden { display: none; }
+        
+        .profile-card { background: var(--dark-lighter); border: 1px solid var(--dark-border); border-radius: 16px; padding: 48px 40px; max-width: 420px; width: 100%; }
+        .profile-image-container { position: relative; width: 120px; height: 120px; margin: 0 auto 24px; }
+        .profile-image { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid var(--orange); background: var(--dark); }
+        .profile-badge { position: absolute; bottom: 4px; right: 4px; width: 28px; height: 28px; background: var(--orange); border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 3px solid var(--dark-lighter); }
+        .profile-badge .material-icons-round { font-size: 16px; color: var(--dark); }
+        .profile-name { font-family: 'Instrument Serif', serif; font-size: 28px; font-weight: 400; margin-bottom: 4px; }
+        .profile-title { color: var(--gray-light); font-size: 15px; margin-bottom: 20px; }
+        .profile-contact { display: flex; justify-content: center; gap: 16px; margin-bottom: 28px; }
+        .contact-btn { width: 44px; height: 44px; background: var(--dark); border: 1px solid var(--dark-border); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--gray-light); text-decoration: none; transition: all 0.2s; }
+        .contact-btn:hover { border-color: var(--orange); color: var(--orange); }
+        .profile-divider { height: 1px; background: var(--dark-border); margin-bottom: 24px; }
+        .profile-bio-label { font-size: 13px; font-weight: 600; color: var(--white); margin-bottom: 12px; text-align: left; }
+        .profile-bio { font-size: 14px; color: var(--gray-light); line-height: 1.7; text-align: left; margin-bottom: 32px; }
+        
+        .btn { font-family: inherit; font-size: 14px; font-weight: 600; padding: 16px 32px; border-radius: 8px; cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 10px; transition: all 0.2s; }
+        .btn-primary { background: var(--orange); color: var(--dark); width: 100%; justify-content: center; }
+        .btn-primary:hover { opacity: 0.9; }
+        .btn-secondary { background: transparent; color: var(--gray-light); border: 1px solid var(--dark-border); }
+        .btn-secondary:hover { border-color: var(--gray); color: var(--white); }
+        .btn-outline { background: transparent; color: var(--orange); border: 1px solid var(--orange); }
+        .btn-outline:hover { background: var(--orange-dim); }
+        
+        /* Form Container */
+        .form-container { display: none; }
+        .form-container.active { display: block; }
+        
+        /* Header */
+        .header-compact { display: flex; align-items: center; justify-content: space-between; margin-bottom: 60px; padding-bottom: 30px; border-bottom: 1px solid var(--dark-border); }
+        .header-left { display: flex; align-items: center; gap: 16px; }
+        .header-avatar { width: 48px; height: 48px; border-radius: 50%; border: 2px solid var(--orange); background: var(--dark-lighter); }
+        .header-info h2 { font-family: 'Instrument Serif', serif; font-size: 18px; font-weight: 400; margin-bottom: 2px; }
+        .header-info p { font-size: 12px; color: var(--gray); }
+        .header-contact { display: flex; gap: 12px; }
+        .header-contact a { width: 36px; height: 36px; background: var(--dark-lighter); border: 1px solid var(--dark-border); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--gray-light); text-decoration: none; }
+        .header-contact a:hover { border-color: var(--orange); color: var(--orange); }
+        
+        /* Page Navigation */
+        .page-nav { display: flex; gap: 8px; margin-bottom: 60px; }
+        .page-indicator { width: 48px; height: 3px; background: var(--dark-border); border-radius: 2px; cursor: pointer; transition: background 0.2s; }
+        .page-indicator.active { background: var(--orange); }
+        
+        /* Sections */
+        .form-page { display: none; }
+        .form-page.active { display: block; }
+        .section-label { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--orange); margin-bottom: 12px; }
+        .section-title { font-family: 'Instrument Serif', serif; font-size: 32px; font-weight: 400; letter-spacing: -0.02em; margin-bottom: 40px; }
+        
+        /* Form Elements */
+        .form-group { margin-bottom: 32px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        label { display: block; font-size: 14px; font-weight: 500; color: var(--gray-light); margin-bottom: 10px; }
+        input[type="text"], input[type="email"], input[type="tel"], textarea, select {
+            width: 100%; padding: 16px 18px; font-family: inherit; font-size: 15px; color: var(--white);
+            background: var(--dark-lighter); border: 1px solid var(--dark-border); border-radius: 8px; outline: none;
+        }
+        input:focus, textarea:focus, select:focus { border-color: var(--orange); }
+        input::placeholder, textarea::placeholder { color: var(--gray); }
+        textarea { min-height: 120px; resize: vertical; }
+        select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%238a8a8a' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 16px center; }
+        select option { background: var(--dark); color: var(--white); }
+        
+        /* Checkbox/Radio Groups */
+        .checkbox-group, .style-options { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .style-options { grid-template-columns: repeat(3, 1fr); }
+        .checkbox-item, .style-option { position: relative; }
+        .checkbox-item input, .style-option input { position: absolute; opacity: 0; cursor: pointer; }
+        .checkbox-label { display: flex; align-items: center; gap: 12px; padding: 16px 18px; background: var(--dark-lighter); border: 1px solid var(--dark-border); border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; color: var(--gray-light); margin-bottom: 0; transition: all 0.2s; }
+        .checkbox-item input:checked + .checkbox-label { border-color: var(--orange); background: var(--orange-dim); color: var(--white); }
+        .checkbox-box { width: 18px; height: 18px; border: 2px solid var(--dark-border); border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s; }
+        .checkbox-item input:checked + .checkbox-label .checkbox-box { border-color: var(--orange); background: var(--orange); }
+        .checkbox-box .material-icons-round { font-size: 14px; color: var(--white); opacity: 0; }
+        .checkbox-item input:checked + .checkbox-label .checkbox-box .material-icons-round { opacity: 1; }
+        .style-label { display: block; padding: 20px 16px; text-align: center; background: var(--dark-lighter); border: 1px solid var(--dark-border); border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--gray-light); margin-bottom: 0; transition: all 0.2s; }
+        .style-option input:checked + .style-label { border-color: var(--orange); background: var(--orange-dim); color: var(--white); }
+        
+        /* Navigation */
+        .form-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 60px; padding-top: 40px; border-top: 1px solid var(--dark-border); }
+        
+        /* Package Section */
+        .packages-intro { color: var(--gray-light); font-size: 16px; margin-bottom: 48px; max-width: 500px; line-height: 1.7; }
+        .service-package-section { margin-bottom: 40px; background: var(--dark-lighter); border: 1px solid var(--dark-border); border-radius: 12px; overflow: hidden; }
+        .service-package-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid var(--dark-border); }
+        .service-package-title { font-family: 'Instrument Serif', serif; font-size: 20px; display: flex; align-items: center; gap: 10px; }
+        .service-toggle { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--gray-light); }
+        .service-toggle input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--orange); cursor: pointer; }
+        
+        /* Tier Tabs */
+        .tier-tabs { display: flex; border-bottom: 1px solid var(--dark-border); }
+        .tier-tab { flex: 1; padding: 16px 20px; background: transparent; border: none; color: var(--gray); font-size: 14px; font-weight: 600; cursor: pointer; position: relative; transition: all 0.2s; font-family: inherit; }
+        .tier-tab:hover { color: var(--gray-light); }
+        .tier-tab.active { color: var(--white); }
+        .tier-tab.active::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: var(--orange); }
+        
+        /* Tier Content */
+        .tier-content { padding: 24px; }
+        .tier-price { font-size: 32px; font-weight: 700; color: var(--white); margin-bottom: 8px; }
+        .tier-subtitle { font-size: 14px; color: var(--orange); margin-bottom: 20px; }
+        .tier-meta { display: flex; gap: 24px; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--dark-border); }
+        .tier-meta-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--gray-light); }
+        .tier-meta-item .material-icons-round { font-size: 18px; color: var(--gray); }
+        
+        /* Deliverables */
+        .deliverables-list { display: flex; flex-direction: column; gap: 12px; }
+        .deliverable-item { display: flex; align-items: center; gap: 12px; font-size: 14px; }
+        .deliverable-item.included { color: var(--gray-light); }
+        .deliverable-item.excluded { color: var(--gray); opacity: 0.5; }
+        .deliverable-item .material-icons-round { font-size: 18px; }
+        .deliverable-item.included .material-icons-round { color: var(--green); }
+        .deliverable-item.excluded .material-icons-round { color: var(--gray); }
+        
+        /* Total Section */
+        .total-section { margin-top: 40px; padding: 24px; background: var(--dark-lighter); border: 1px solid var(--dark-border); border-radius: 12px; }
+        .total-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .total-label { font-size: 14px; color: var(--gray-light); }
+        .total-value { font-size: 14px; color: var(--white); }
+        .total-row.grand-total { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--dark-border); margin-bottom: 0; }
+        .total-row.grand-total .total-label { font-size: 18px; font-weight: 600; color: var(--white); }
+        .total-row.grand-total .total-value { font-size: 28px; font-weight: 700; color: var(--orange); }
+        .multiplier-note { font-size: 12px; color: var(--gray); margin-top: 12px; }
+        
+        /* Submit Section */
+        .submit-section { margin-top: 40px; }
+        .submit-buttons { display: flex; gap: 16px; margin-bottom: 20px; }
+        .submit-buttons .btn { flex: 1; justify-content: center; }
+        .submit-note { text-align: center; font-size: 13px; color: var(--gray); }
+        
+        /* Success Message */
+        .success-message { display: none; text-align: center; padding: 80px 20px; }
+        .success-message.active { display: block; }
+        .success-icon { width: 80px; height: 80px; background: var(--orange); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 32px; }
+        .success-icon .material-icons-round { font-size: 40px; color: var(--dark); }
+        .success-title { font-family: 'Instrument Serif', serif; font-size: 36px; margin-bottom: 16px; }
+        .success-text { color: var(--gray-light); font-size: 16px; max-width: 400px; margin: 0 auto; line-height: 1.7; }
+        
+        /* Footer */
+        .footer { margin-top: 80px; padding-top: 40px; border-top: 1px solid var(--dark-border); text-align: center; color: var(--gray); font-size: 13px; }
+        
+        /* Responsive */
+        @media (max-width: 600px) {
+            .form-row, .checkbox-group { grid-template-columns: 1fr; }
+            .style-options { grid-template-columns: repeat(2, 1fr); }
+            .header-compact { flex-direction: column; gap: 20px; text-align: center; }
+            .header-left { flex-direction: column; }
+            .submit-buttons { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- WELCOME PAGE -->
+        <div class="welcome-page" id="welcomePage">
+            <div class="profile-card">
+                <div class="profile-image-container">
+                    <!-- Profile image placeholder - use actual image URL in production -->
+                    <div class="profile-image" style="display: flex; align-items: center; justify-content: center;">
+                        <span class="material-icons-round" style="font-size: 48px; color: var(--gray);">person</span>
+                    </div>
+                    <div class="profile-badge">
+                        <span class="material-icons-round">check</span>
+                    </div>
+                </div>
+                <h1 class="profile-name">Naweed Hesan</h1>
+                <p class="profile-title">Graphic Designer</p>
+                
+                <div class="profile-contact">
+                    <a href="tel:5613658832" class="contact-btn" title="Call">
+                        <span class="material-icons-round">phone</span>
+                    </a>
+                    <a href="mailto:naweedhesan@gmail.com" class="contact-btn" title="Email">
+                        <span class="material-icons-round">mail</span>
+                    </a>
+                </div>
+                
+                <div class="profile-divider"></div>
+                
+                <p class="profile-bio-label">Bio</p>
+                <p class="profile-bio">I help startups & companies clarify their brand identity and bring it to life with design that sells. Over the past 8+ years, I've rebranded veteran orgs, launched products, and created campaigns that raised funding and awareness. Clients book me not because I'm flashy, but because I make design decisions that make business sense.</p>
+                
+                <button class="btn btn-primary" onclick="startQuestionnaire()">
+                    Start Project Inquiry
+                    <span class="material-icons-round">arrow_forward</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- SUCCESS MESSAGE -->
+        <div class="success-message" id="successMessage">
+            <div class="success-icon">
+                <span class="material-icons-round">check</span>
+            </div>
+            <h2 class="success-title">Thank you!</h2>
+            <p class="success-text">Your project inquiry has been submitted successfully. I'll review the details and get back to you within 24-48 hours.</p>
+        </div>
+
+        <!-- FORM CONTAINER -->
+        <div class="form-container" id="formContainer">
+            <!-- Header -->
+            <div class="header-compact">
+                <div class="header-left">
+                    <div class="header-avatar" style="display: flex; align-items: center; justify-content: center;">
+                        <span class="material-icons-round" style="font-size: 24px; color: var(--gray);">person</span>
+                    </div>
+                    <div class="header-info">
+                        <h2>Naweed Hesan</h2>
+                        <p>naweedhesan@gmail.com • (561) 365-8832</p>
+                    </div>
+                </div>
+                <div class="header-contact">
+                    <a href="tel:5613658832" title="Call"><span class="material-icons-round">phone</span></a>
+                    <a href="mailto:naweedhesan@gmail.com" title="Email"><span class="material-icons-round">mail</span></a>
+                </div>
+            </div>
+
+            <!-- Page Navigation -->
+            <div class="page-nav">
+                <div class="page-indicator active" data-page="1"></div>
+                <div class="page-indicator" data-page="2"></div>
+                <div class="page-indicator" data-page="3"></div>
+            </div>
+
+            <!-- PAGE 1: About You -->
+            <div class="form-page active" id="page1">
+                <span class="section-label">Step 01</span>
+                <h2 class="section-title">About You & Your Project</h2>
+
+                <div class="form-row form-group">
+                    <div>
+                        <label>Full Name</label>
+                        <input type="text" id="fullName" placeholder="John Smith">
+                    </div>
+                    <div>
+                        <label>Company / Brand</label>
+                        <input type="text" id="company" placeholder="Acme Inc.">
+                    </div>
+                </div>
+
+                <div class="form-row form-group">
+                    <div>
+                        <label>Email Address</label>
+                        <input type="email" id="email" placeholder="john@example.com">
+                    </div>
+                    <div>
+                        <label>Phone Number</label>
+                        <input type="tel" id="phone" placeholder="+1 (555) 000-0000">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>What services are you interested in?</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="service-branding" onchange="updateServices()">
+                            <label for="service-branding" class="checkbox-label">
+                                <span class="checkbox-box"><span class="material-icons-round">check</span></span>
+                                Branding
+                            </label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="service-webdesign" onchange="updateServices()">
+                            <label for="service-webdesign" class="checkbox-label">
+                                <span class="checkbox-box"><span class="material-icons-round">check</span></span>
+                                Web Design
+                            </label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="service-packaging" onchange="updateServices()">
+                            <label for="service-packaging" class="checkbox-label">
+                                <span class="checkbox-box"><span class="material-icons-round">check</span></span>
+                                Packaging
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Tell me about your project</label>
+                    <textarea id="projectDescription" placeholder="Describe your business, goals, and what you're looking to achieve..."></textarea>
+                </div>
+
+                <div class="form-row form-group">
+                    <div>
+                        <label>Industry / Niche</label>
+                        <input type="text" id="industry" placeholder="e.g., Tech, Fashion, Food">
+                    </div>
+                    <div>
+                        <label>Target Audience</label>
+                        <input type="text" id="targetAudience" placeholder="e.g., Young professionals, 25-40">
+                    </div>
+                </div>
+
+                <div class="form-nav">
+                    <div></div>
+                    <button class="btn btn-primary" onclick="goToPage(2)" style="width: auto;">
+                        Continue
+                        <span class="material-icons-round">arrow_forward</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- PAGE 2: Design Preferences -->
+            <div class="form-page" id="page2">
+                <span class="section-label">Step 02</span>
+                <h2 class="section-title">Design Preferences</h2>
+
+                <div class="form-group">
+                    <label>What style best describes your vision? (Select all that apply)</label>
+                    <div class="style-options">
+                        <div class="style-option"><input type="checkbox" id="style-minimal"><label for="style-minimal" class="style-label">Minimal</label></div>
+                        <div class="style-option"><input type="checkbox" id="style-modern"><label for="style-modern" class="style-label">Modern</label></div>
+                        <div class="style-option"><input type="checkbox" id="style-bold"><label for="style-bold" class="style-label">Bold</label></div>
+                        <div class="style-option"><input type="checkbox" id="style-elegant"><label for="style-elegant" class="style-label">Elegant</label></div>
+                        <div class="style-option"><input type="checkbox" id="style-playful"><label for="style-playful" class="style-label">Playful</label></div>
+                        <div class="style-option"><input type="checkbox" id="style-classic"><label for="style-classic" class="style-label">Classic</label></div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Preferred color direction (Select all that apply)</label>
+                    <div class="style-options">
+                        <div class="style-option"><input type="checkbox" id="color-warm"><label for="color-warm" class="style-label">Warm Tones</label></div>
+                        <div class="style-option"><input type="checkbox" id="color-cool"><label for="color-cool" class="style-label">Cool Tones</label></div>
+                        <div class="style-option"><input type="checkbox" id="color-neutral"><label for="color-neutral" class="style-label">Neutral</label></div>
+                        <div class="style-option"><input type="checkbox" id="color-vibrant"><label for="color-vibrant" class="style-label">Vibrant</label></div>
+                        <div class="style-option"><input type="checkbox" id="color-muted"><label for="color-muted" class="style-label">Muted</label></div>
+                        <div class="style-option"><input type="checkbox" id="color-mono"><label for="color-mono" class="style-label">Monochrome</label></div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Any specific colors in mind?</label>
+                    <input type="text" id="specificColors" placeholder="e.g., Navy blue, Gold accents, Earth tones">
+                </div>
+
+                <div class="form-group">
+                    <label>Typography preference (Select all that apply)</label>
+                    <div class="style-options">
+                        <div class="style-option"><input type="checkbox" id="font-sans"><label for="font-sans" class="style-label">Sans Serif</label></div>
+                        <div class="style-option"><input type="checkbox" id="font-serif"><label for="font-serif" class="style-label">Serif</label></div>
+                        <div class="style-option"><input type="checkbox" id="font-script"><label for="font-script" class="style-label">Script</label></div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Reference links or inspiration</label>
+                    <textarea id="references" placeholder="Share links to brands, websites, or designs you admire..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Anything you want to avoid?</label>
+                    <input type="text" id="thingsToAvoid" placeholder="e.g., No bright colors, avoid script fonts">
+                </div>
+
+                <div class="form-row form-group">
+                    <div>
+                        <label>Ideal Timeline</label>
+                        <select id="timeline" onchange="updatePricing()">
+                            <option value="">Select timeline</option>
+                            <option value="asap">ASAP (Rush)</option>
+                            <option value="2weeks">Within 2 weeks</option>
+                            <option value="1month">Within 1 month</option>
+                            <option value="2months">1-2 months</option>
+                            <option value="flexible">Flexible</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Budget Range</label>
+                        <select id="budget" onchange="updatePricing()">
+                            <option value="">Select budget</option>
+                            <option value="under1k">Under $1,000</option>
+                            <option value="1k-2.5k">$1,000 - $2,500</option>
+                            <option value="2.5k-5k">$2,500 - $5,000</option>
+                            <option value="5k-10k">$5,000 - $10,000</option>
+                            <option value="10k-25k">$10,000 - $25,000</option>
+                            <option value="25k+">$25,000+</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Do you have any existing brand assets?</label>
+                    <select id="existingAssets">
+                        <option value="">Select option</option>
+                        <option value="scratch">Starting from scratch</option>
+                        <option value="logo-refresh">Have a logo (needs refresh)</option>
+                        <option value="some-elements">Have some brand elements</option>
+                        <option value="full-rebrand">Have full branding (needs redesign)</option>
+                    </select>
+                </div>
+
+                <div class="form-nav">
+                    <button class="btn btn-secondary" onclick="goToPage(1)">
+                        <span class="material-icons-round">arrow_back</span>
+                        Back
+                    </button>
+                    <button class="btn btn-primary" onclick="goToPage(3)" style="width: auto;">
+                        Continue
+                        <span class="material-icons-round">arrow_forward</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- PAGE 3: Packages -->
+            <div class="form-page" id="page3">
+                <span class="section-label">Step 03</span>
+                <h2 class="section-title">Select Your Packages</h2>
+                <p class="packages-intro">Based on your selections, here are the packages available. Prices adjust based on your timeline and budget.</p>
+
+                <div id="noServicesMessage" style="padding: 40px 20px; text-align: center; color: var(--gray);">
+                    <span class="material-icons-round" style="font-size: 48px; margin-bottom: 16px; display: block;">info</span>
+                    <p>Please go back and select at least one service to see packages.</p>
+                </div>
+
+                <!-- BRANDING PACKAGE SECTION -->
+                <div class="service-package-section" id="brandingSection" style="display: none;">
+                    <div class="service-package-header">
+                        <h3 class="service-package-title">
+                            <span class="material-icons-round">palette</span>
+                            Branding
+                        </h3>
+                        <label class="service-toggle">
+                            <input type="checkbox" id="brandingInclude" checked onchange="updatePricing()">
+                            Include
+                        </label>
+                    </div>
+                    <div class="tier-tabs">
+                        <button class="tier-tab active" onclick="selectTier('branding', 'basic', this)">Basic</button>
+                        <button class="tier-tab" onclick="selectTier('branding', 'standard', this)">Standard</button>
+                        <button class="tier-tab" onclick="selectTier('branding', 'premium', this)">Premium</button>
+                    </div>
+                    <div class="tier-content" id="brandingContent">
+                        <!-- Content dynamically generated -->
+                    </div>
+                </div>
+
+                <!-- WEB DESIGN PACKAGE SECTION -->
+                <div class="service-package-section" id="webdesignSection" style="display: none;">
+                    <div class="service-package-header">
+                        <h3 class="service-package-title">
+                            <span class="material-icons-round">web</span>
+                            Web Design
+                        </h3>
+                        <label class="service-toggle">
+                            <input type="checkbox" id="webdesignInclude" checked onchange="updatePricing()">
+                            Include
+                        </label>
+                    </div>
+                    <div class="tier-tabs">
+                        <button class="tier-tab active" onclick="selectTier('webdesign', 'basic', this)">Basic</button>
+                        <button class="tier-tab" onclick="selectTier('webdesign', 'standard', this)">Standard</button>
+                        <button class="tier-tab" onclick="selectTier('webdesign', 'premium', this)">Premium</button>
+                    </div>
+                    <div class="tier-content" id="webdesignContent">
+                        <!-- Content dynamically generated -->
+                    </div>
+                </div>
+
+                <!-- PACKAGING PACKAGE SECTION -->
+                <div class="service-package-section" id="packagingSection" style="display: none;">
+                    <div class="service-package-header">
+                        <h3 class="service-package-title">
+                            <span class="material-icons-round">inventory_2</span>
+                            Packaging
+                        </h3>
+                        <label class="service-toggle">
+                            <input type="checkbox" id="packagingInclude" checked onchange="updatePricing()">
+                            Include
+                        </label>
+                    </div>
+                    <div class="tier-tabs">
+                        <button class="tier-tab active" onclick="selectTier('packaging', 'basic', this)">Basic</button>
+                        <button class="tier-tab" onclick="selectTier('packaging', 'standard', this)">Standard</button>
+                        <button class="tier-tab" onclick="selectTier('packaging', 'premium', this)">Premium</button>
+                    </div>
+                    <div class="tier-content" id="packagingContent">
+                        <!-- Content dynamically generated -->
+                    </div>
+                </div>
+
+                <!-- TOTAL SECTION -->
+                <div class="total-section" id="totalSection" style="display: none;">
+                    <div id="totalBreakdown"></div>
+                    <div class="total-row grand-total">
+                        <span class="total-label">Estimated Total</span>
+                        <span class="total-value" id="grandTotal">$0</span>
+                    </div>
+                    <p class="multiplier-note" id="multiplierNote" style="display: none;"></p>
+                </div>
+
+                <!-- Additional Notes -->
+                <div id="additionalSection" style="margin-top: 40px; display: none;">
+                    <div class="form-group">
+                        <label>Anything else you'd like to share?</label>
+                        <textarea id="additionalNotes" placeholder="Any additional details, questions, or special requests..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>How did you hear about me?</label>
+                        <select id="referralSource">
+                            <option value="">Select option</option>
+                            <option value="google">Google Search</option>
+                            <option value="social">Social Media</option>
+                            <option value="referral">Friend/Colleague Referral</option>
+                            <option value="portfolio">Portfolio Site</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-nav">
+                    <button class="btn btn-secondary" onclick="goToPage(2)">
+                        <span class="material-icons-round">arrow_back</span>
+                        Back
+                    </button>
+                    <div></div>
+                </div>
+
+                <!-- Submit Section -->
+                <div class="submit-section" id="submitSection" style="display: none;">
+                    <div class="submit-buttons">
+                        <button class="btn btn-outline" onclick="submitForm(true)">
+                            <span class="material-icons-round">chat</span>
+                            Contact for Custom Quote
+                        </button>
+                        <button class="btn btn-primary" onclick="submitForm(false)" style="width: auto; flex: 1;">
+                            Submit Inquiry
+                            <span class="material-icons-round">arrow_forward</span>
+                        </button>
+                    </div>
+                    <p class="submit-note">I'll review your submission and get back to you within 24-48 hours.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>© 2025 Naweed Hesan. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script>
+        // =====================================================
+        // PRICING DATA - This drives all the dynamic pricing
+        // =====================================================
+        const PRICING = {
+            branding: {
+                basic: {
+                    price: 499, days: 14, revisions: 2,
+                    deliverables: [
+                        { name: 'Logo Design (2 Concepts)', included: true },
+                        { name: 'Color Palette', included: true },
+                        { name: 'Logo Usage Guidelines', included: true },
+                        { name: 'Brand Mockups', included: true },
+                        { name: 'Typography System', included: false },
+                        { name: 'Brand Book Design', included: false },
+                        { name: 'Stationery Suite', included: false },
+                        { name: 'Presentation Template', included: false },
+                        { name: 'Iconography Set', included: false },
+                        { name: "Brand Do's & Don'ts", included: false },
+                    ]
+                },
+                standard: {
+                    price: 999, days: 21, revisions: 4,
+                    deliverables: [
+                        { name: 'Logo Design (2 Concepts)', included: true },
+                        { name: 'Color Palette', included: true },
+                        { name: 'Logo Usage Guidelines', included: true },
+                        { name: 'Brand Mockups', included: true },
+                        { name: 'Typography System', included: true },
+                        { name: 'Brand Book Design', included: true },
+                        { name: 'Stationery Suite', included: false },
+                        { name: 'Presentation Template', included: false },
+                        { name: 'Iconography Set', included: false },
+                        { name: "Brand Do's & Don'ts", included: false },
+                    ]
+                },
+                premium: {
+                    price: 1499, days: 30, revisions: 6,
+                    deliverables: [
+                        { name: 'Logo Design (2 Concepts)', included: true },
+                        { name: 'Color Palette', included: true },
+                        { name: 'Logo Usage Guidelines', included: true },
+                        { name: 'Brand Mockups', included: true },
+                        { name: 'Typography System', included: true },
+                        { name: 'Brand Book Design', included: true },
+                        { name: 'Stationery Suite', included: true },
+                        { name: 'Presentation Template', included: true },
+                        { name: 'Iconography Set', included: true },
+                        { name: "Brand Do's & Don'ts", included: true },
+                    ]
+                }
+            },
+            webdesign: {
+                basic: {
+                    price: 1999, days: 21, revisions: 2,
+                    deliverables: [
+                        { name: '1-Page Landing Design', included: true },
+                        { name: 'Desktop + Mobile Responsive', included: true },
+                        { name: 'Style Direction', included: true },
+                        { name: 'Figma + Asset Exports', included: true },
+                        { name: 'Discovery Workshop', included: false },
+                        { name: 'Sitemap & Wireframes', included: false },
+                        { name: 'Up to 5 Pages', included: false },
+                        { name: 'Interactive Prototype', included: false },
+                        { name: 'Design System', included: false },
+                        { name: 'Developer Handoff', included: false },
+                        { name: 'Strategy Workshop', included: false },
+                        { name: 'Up to 10 Pages', included: false },
+                        { name: 'Micro-interaction Specs', included: false },
+                        { name: 'Accessibility Review', included: false },
+                    ]
+                },
+                standard: {
+                    price: 3999, days: 30, revisions: 4,
+                    deliverables: [
+                        { name: '1-Page Landing Design', included: true },
+                        { name: 'Desktop + Mobile Responsive', included: true },
+                        { name: 'Style Direction', included: true },
+                        { name: 'Figma + Asset Exports', included: true },
+                        { name: 'Discovery Workshop', included: true },
+                        { name: 'Sitemap & Wireframes', included: true },
+                        { name: 'Up to 5 Pages', included: true },
+                        { name: 'Interactive Prototype', included: true },
+                        { name: 'Design System', included: true },
+                        { name: 'Developer Handoff', included: true },
+                        { name: 'Strategy Workshop', included: false },
+                        { name: 'Up to 10 Pages', included: false },
+                        { name: 'Micro-interaction Specs', included: false },
+                        { name: 'Accessibility Review', included: false },
+                    ]
+                },
+                premium: {
+                    price: 9900, days: 60, revisions: 6,
+                    deliverables: [
+                        { name: '1-Page Landing Design', included: true },
+                        { name: 'Desktop + Mobile Responsive', included: true },
+                        { name: 'Style Direction', included: true },
+                        { name: 'Figma + Asset Exports', included: true },
+                        { name: 'Discovery Workshop', included: true },
+                        { name: 'Sitemap & Wireframes', included: true },
+                        { name: 'Up to 5 Pages', included: true },
+                        { name: 'Interactive Prototype', included: true },
+                        { name: 'Design System', included: true },
+                        { name: 'Developer Handoff', included: true },
+                        { name: 'Strategy Workshop', included: true },
+                        { name: 'Up to 10 Pages', included: true },
+                        { name: 'Micro-interaction Specs', included: true },
+                        { name: 'Accessibility Review', included: true },
+                    ]
+                }
+            },
+            packaging: {
+                basic: {
+                    price: 999, days: 14, revisions: 2,
+                    deliverables: [
+                        { name: '1-2 Product Designs', included: true },
+                        { name: 'Label or Box Design', included: true },
+                        { name: 'Print-Ready Files', included: true },
+                        { name: 'Product Mockups', included: true },
+                        { name: '3-5 Product Designs', included: false },
+                        { name: 'Custom Dielines', included: false },
+                        { name: 'Brand Consistency', included: false },
+                        { name: 'Multiple Mockups', included: false },
+                        { name: 'Full Product Line', included: false },
+                        { name: '3D Product Mockups', included: false },
+                        { name: 'Print Specifications', included: false },
+                        { name: 'Production Guidance', included: false },
+                    ]
+                },
+                standard: {
+                    price: 1999, days: 21, revisions: 4,
+                    deliverables: [
+                        { name: '1-2 Product Designs', included: true },
+                        { name: 'Label or Box Design', included: true },
+                        { name: 'Print-Ready Files', included: true },
+                        { name: 'Product Mockups', included: true },
+                        { name: '3-5 Product Designs', included: true },
+                        { name: 'Custom Dielines', included: true },
+                        { name: 'Brand Consistency', included: true },
+                        { name: 'Multiple Mockups', included: true },
+                        { name: 'Full Product Line', included: false },
+                        { name: '3D Product Mockups', included: false },
+                        { name: 'Print Specifications', included: false },
+                        { name: 'Production Guidance', included: false },
+                    ]
+                },
+                premium: {
+                    price: 3499, days: 30, revisions: 6,
+                    deliverables: [
+                        { name: '1-2 Product Designs', included: true },
+                        { name: 'Label or Box Design', included: true },
+                        { name: 'Print-Ready Files', included: true },
+                        { name: 'Product Mockups', included: true },
+                        { name: '3-5 Product Designs', included: true },
+                        { name: 'Custom Dielines', included: true },
+                        { name: 'Brand Consistency', included: true },
+                        { name: 'Multiple Mockups', included: true },
+                        { name: 'Full Product Line', included: true },
+                        { name: '3D Product Mockups', included: true },
+                        { name: 'Print Specifications', included: true },
+                        { name: 'Production Guidance', included: true },
+                    ]
+                }
+            }
+        };
+
+        // MULTIPLIERS
+        const BUDGET_MULTIPLIERS = {
+            '': 1, 'under1k': 1, '1k-2.5k': 1, '2.5k-5k': 1.25,
+            '5k-10k': 1.5, '10k-25k': 2, '25k+': 2.5
+        };
+        const TIMELINE_MULTIPLIERS = {
+            '': 1, 'asap': 1.5, '2weeks': 1.25, '1month': 1, '2months': 1, 'flexible': 1
+        };
+
+        // STATE
+        let selectedServices = [];
+        let selectedTiers = { branding: 'basic', webdesign: 'basic', packaging: 'basic' };
+
+        // NAVIGATION
+        function startQuestionnaire() {
+            document.getElementById('welcomePage').classList.add('hidden');
+            document.getElementById('formContainer').classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function goToPage(page) {
+            document.querySelectorAll('.form-page').forEach(p => p.classList.remove('active'));
+            document.getElementById('page' + page).classList.add('active');
+            document.querySelectorAll('.page-indicator').forEach((ind, i) => {
+                ind.classList.toggle('active', i < page);
+            });
+            if (page === 3) updatePackagesDisplay();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // SERVICE SELECTION
+        function updateServices() {
+            selectedServices = [];
+            if (document.getElementById('service-branding').checked) selectedServices.push('branding');
+            if (document.getElementById('service-webdesign').checked) selectedServices.push('webdesign');
+            if (document.getElementById('service-packaging').checked) selectedServices.push('packaging');
+        }
+
+        // PACKAGE DISPLAY
+        function updatePackagesDisplay() {
+            const hasServices = selectedServices.length > 0;
+            document.getElementById('noServicesMessage').style.display = hasServices ? 'none' : 'block';
+            document.getElementById('brandingSection').style.display = selectedServices.includes('branding') ? 'block' : 'none';
+            document.getElementById('webdesignSection').style.display = selectedServices.includes('webdesign') ? 'block' : 'none';
+            document.getElementById('packagingSection').style.display = selectedServices.includes('packaging') ? 'block' : 'none';
+            document.getElementById('totalSection').style.display = hasServices ? 'block' : 'none';
+            document.getElementById('additionalSection').style.display = hasServices ? 'block' : 'none';
+            document.getElementById('submitSection').style.display = hasServices ? 'block' : 'none';
+            
+            if (hasServices) {
+                selectedServices.forEach(service => renderTierContent(service, selectedTiers[service]));
+                updatePricing();
+            }
+        }
+
+        function selectTier(service, tier, btn) {
+            selectedTiers[service] = tier;
+            btn.parentElement.querySelectorAll('.tier-tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            renderTierContent(service, tier);
+            updatePricing();
+        }
+
+        function renderTierContent(service, tier) {
+            const data = PRICING[service][tier];
+            const price = calculatePrice(service, tier);
+            const container = document.getElementById(service + 'Content');
+            
+            const deliverablesList = data.deliverables.map(d => `
+                <div class="deliverable-item ${d.included ? 'included' : 'excluded'}">
+                    <span class="material-icons-round">${d.included ? 'check_circle' : 'cancel'}</span>
+                    ${d.name}
+                </div>
+            `).join('');
+
+            container.innerHTML = `
+                <div class="tier-price">$${price.toLocaleString()}</div>
+                <p class="tier-subtitle">${tier.charAt(0).toUpperCase() + tier.slice(1)} Package</p>
+                <div class="tier-meta">
+                    <div class="tier-meta-item">
+                        <span class="material-icons-round">schedule</span>
+                        ${data.days}-day delivery
+                    </div>
+                    <div class="tier-meta-item">
+                        <span class="material-icons-round">refresh</span>
+                        ${data.revisions} Revisions
+                    </div>
+                </div>
+                <div class="deliverables-list">${deliverablesList}</div>
+            `;
+        }
+
+        function calculatePrice(service, tier) {
+            const base = PRICING[service][tier].price;
+            const budgetMult = BUDGET_MULTIPLIERS[document.getElementById('budget').value] || 1;
+            const timelineMult = TIMELINE_MULTIPLIERS[document.getElementById('timeline').value] || 1;
+            return Math.round(base * budgetMult * timelineMult);
+        }
+
+        function updatePricing() {
+            let total = 0;
+            let breakdown = '';
+            const budgetMult = BUDGET_MULTIPLIERS[document.getElementById('budget').value] || 1;
+            const timelineMult = TIMELINE_MULTIPLIERS[document.getElementById('timeline').value] || 1;
+
+            selectedServices.forEach(service => {
+                renderTierContent(service, selectedTiers[service]);
+                const include = document.getElementById(service + 'Include');
+                if (include && include.checked) {
+                    const price = calculatePrice(service, selectedTiers[service]);
+                    total += price;
+                    const serviceName = service === 'webdesign' ? 'Web Design' : service.charAt(0).toUpperCase() + service.slice(1);
+                    breakdown += `<div class="total-row"><span class="total-label">${serviceName} (${selectedTiers[service]})</span><span class="total-value">$${price.toLocaleString()}</span></div>`;
+                }
+            });
+
+            document.getElementById('totalBreakdown').innerHTML = breakdown;
+            document.getElementById('grandTotal').textContent = '$' + total.toLocaleString();
+
+            const noteEl = document.getElementById('multiplierNote');
+            if (budgetMult > 1 || timelineMult > 1) {
+                let note = '* Price includes adjustments for ';
+                if (budgetMult > 1) note += `budget (${budgetMult}x)`;
+                if (budgetMult > 1 && timelineMult > 1) note += ' and ';
+                if (timelineMult > 1) note += `timeline (${timelineMult}x)`;
+                noteEl.textContent = note;
+                noteEl.style.display = 'block';
+            } else {
+                noteEl.style.display = 'none';
+            }
+        }
+
+        // FORM SUBMISSION
+        function submitForm(isCustomQuote) {
+            // In production, this would send data to Resend API
+            // For now, just show success message
+            alert(isCustomQuote ? 
+                'Custom quote request would be sent to naweedhesan@gmail.com via Resend API' : 
+                'Form submission would be sent to naweedhesan@gmail.com via Resend API');
+            
+            document.getElementById('formContainer').classList.remove('active');
+            document.getElementById('successMessage').classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Page indicator clicks
+        document.querySelectorAll('.page-indicator').forEach(ind => {
+            ind.addEventListener('click', () => goToPage(parseInt(ind.dataset.page)));
+        });
+    </script>
+</body>
+</html>
