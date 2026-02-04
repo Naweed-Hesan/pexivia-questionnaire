@@ -964,16 +964,107 @@
         }
 
         // FORM SUBMISSION
-        function submitForm(isCustomQuote) {
-            // In production, this would send data to Resend API
-            // For now, just show success message
-            alert(isCustomQuote ? 
-                'Custom quote request would be sent to naweedhesan@gmail.com via Resend API' : 
-                'Form submission would be sent to naweedhesan@gmail.com via Resend API');
-            
-            document.getElementById('formContainer').classList.remove('active');
-            document.getElementById('successMessage').classList.add('active');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+        async function submitForm(isCustomQuote) {
+            // Disable buttons while submitting
+            const submitBtns = document.querySelectorAll('.submit-buttons .btn');
+            submitBtns.forEach(btn => {
+                btn.disabled = true;
+                btn.style.opacity = '0.6';
+                btn.style.cursor = 'wait';
+            });
+
+            // Gather all form data
+            const formData = {
+                isCustomQuote,
+                // Contact Info
+                fullName: document.getElementById('fullName').value.trim(),
+                company: document.getElementById('company').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                phone: document.getElementById('phone').value.trim(),
+                // Services
+                services: selectedServices.map(s => s === 'webdesign' ? 'Web Design' : s.charAt(0).toUpperCase() + s.slice(1)),
+                // Project Details
+                projectDescription: document.getElementById('projectDescription').value.trim(),
+                industry: document.getElementById('industry').value.trim(),
+                targetAudience: document.getElementById('targetAudience').value.trim(),
+                // Design Preferences - Styles
+                styles: [
+                    document.getElementById('style-minimal').checked && 'Minimal',
+                    document.getElementById('style-modern').checked && 'Modern',
+                    document.getElementById('style-bold').checked && 'Bold',
+                    document.getElementById('style-elegant').checked && 'Elegant',
+                    document.getElementById('style-playful').checked && 'Playful',
+                    document.getElementById('style-classic').checked && 'Classic'
+                ].filter(Boolean),
+                // Design Preferences - Colors
+                colors: [
+                    document.getElementById('color-warm').checked && 'Warm Tones',
+                    document.getElementById('color-cool').checked && 'Cool Tones',
+                    document.getElementById('color-neutral').checked && 'Neutral',
+                    document.getElementById('color-vibrant').checked && 'Vibrant',
+                    document.getElementById('color-muted').checked && 'Muted',
+                    document.getElementById('color-mono').checked && 'Monochrome'
+                ].filter(Boolean),
+                specificColors: document.getElementById('specificColors').value.trim(),
+                // Typography
+                typography: [
+                    document.getElementById('font-sans').checked && 'Sans Serif',
+                    document.getElementById('font-serif').checked && 'Serif',
+                    document.getElementById('font-script').checked && 'Script'
+                ].filter(Boolean),
+                references: document.getElementById('references').value.trim(),
+                thingsToAvoid: document.getElementById('thingsToAvoid').value.trim(),
+                // Timeline & Budget
+                timeline: document.getElementById('timeline').value,
+                timelineLabel: document.getElementById('timeline').options[document.getElementById('timeline').selectedIndex]?.text || '',
+                budget: document.getElementById('budget').value,
+                budgetLabel: document.getElementById('budget').options[document.getElementById('budget').selectedIndex]?.text || '',
+                existingAssets: document.getElementById('existingAssets').value,
+                existingAssetsLabel: document.getElementById('existingAssets').options[document.getElementById('existingAssets').selectedIndex]?.text || '',
+                // Packages
+                packages: selectedServices
+                    .filter(service => document.getElementById(service + 'Include')?.checked)
+                    .map(service => ({
+                        service: service === 'webdesign' ? 'Web Design' : service.charAt(0).toUpperCase() + service.slice(1),
+                        tier: selectedTiers[service].charAt(0).toUpperCase() + selectedTiers[service].slice(1),
+                        price: calculatePrice(service, selectedTiers[service])
+                    })),
+                totalPrice: parseInt(document.getElementById('grandTotal').textContent.replace(/[$,]/g, '')) || 0,
+                multiplierNote: document.getElementById('multiplierNote').style.display !== 'none'
+                    ? document.getElementById('multiplierNote').textContent
+                    : '',
+                // Additional
+                additionalNotes: document.getElementById('additionalNotes')?.value.trim() || '',
+                referralSource: document.getElementById('referralSource')?.value || '',
+                referralSourceLabel: document.getElementById('referralSource')?.options[document.getElementById('referralSource').selectedIndex]?.text || ''
+            };
+
+            try {
+                const response = await fetch('/api/send-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    document.getElementById('formContainer').classList.remove('active');
+                    document.getElementById('successMessage').classList.add('active');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                } else {
+                    throw new Error(result.error || 'Failed to send');
+                }
+            } catch (error) {
+                console.error('Submit error:', error);
+                alert('There was an error submitting your inquiry. Please try again or contact naweedhesan@gmail.com directly.');
+                // Re-enable buttons
+                submitBtns.forEach(btn => {
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                    btn.style.cursor = 'pointer';
+                });
+            }
         }
 
         // Page indicator clicks

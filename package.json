@@ -1,0 +1,11 @@
+{
+  "name": "pexivia-questionnaire",
+  "version": "1.0.0",
+  "description": "Client project questionnaire for Pexivia.com",
+  "scripts": {
+    "dev": "vercel dev"
+  },
+  "dependencies": {
+    "resend": "^4.0.0"
+  }
+}
