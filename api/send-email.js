@@ -23,7 +23,7 @@ export default async function handler(req, res) {
 
     // Send email to Naweed
     const ownerEmail = await resend.emails.send({
-      from: 'Pexivia <noreply@pexivia.com>',
+      from: 'Pexivia <noreply@send.pexivia.com>',
       to: 'naweedhesan@gmail.com',
       subject: data.isCustomQuote
         ? `Custom Quote Request from ${data.fullName || 'New Lead'}`
@@ -34,7 +34,7 @@ export default async function handler(req, res) {
     // Send confirmation email to client (if they provided an email)
     if (data.email) {
       await resend.emails.send({
-        from: 'Naweed Hesan <noreply@pexivia.com>',
+        from: 'Naweed Hesan <noreply@send.pexivia.com>',
         to: data.email,
         subject: 'Thank you for your inquiry - Pexivia',
         html: clientEmailHtml,
